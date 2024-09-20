@@ -1,0 +1,140 @@
+# Additional stuff for your formatted file. 
+# Including no. reads, genus and species (species included if all
+# species match in top 3 reads) and sequence length.
+
+# Replace format.py code with this code if you wish.
+
+import os
+import csv
+
+info = []
+
+for contig in os.listdir("./contigs"):
+    if contig.endswith(".fasta"):
+        continue
+    file = open("./contigs/" + contig, "r")
+    lines = file.readlines()
+
+    reads = lines[14].split(" ")[2]
+
+    begin = 21
+    genera = []
+    species = []
+
+    same_species = True
+
+    genera_count = 0
+
+    for i in range(begin, begin + 3):
+        if len(lines[i].split(" ")) == 1:
+            break
+        genus = lines[i].split(" ")[1]
+        specie = lines[i].split(" ")[2]
+
+        sub = ""
+
+        for idx in range(3, 5):
+            if lines[i].split(" ")[idx] != "":
+                sub += lines[i].split(" ")[idx] + " "
+
+                if idx == 4:
+                    sub = sub[:-1]
+
+        if sub != "":
+            specie = specie + " " + sub
+        else:
+            specie = lines[i].split(" ")[2]
+
+        species.append(specie)
+        genera.append(genus)
+
+    for i in range(begin, begin + 3):
+        if len(lines[i].split(" ")) == 1:
+            break
+
+        for idx in range(3, 5):
+            if lines[i].split(" ")[idx] != "":
+                sub += lines[i].split(" ")[idx] + " "
+
+                if idx == 4:
+                    sub = sub[:-1]
+
+        if sub != "":
+            specie = specie + " " + sub
+        else:
+            specie = lines[i].split(" ")[2]
+
+        if specie != species[0]:
+            same_species = False
+
+    genus = ""
+    spec = ""
+
+    if genera.count(genera[0]) > 2:
+        genus = genera[0]
+        if same_species:
+            spec = species[0]
+    elif genera.count(genera[0]) == 2:
+        genus = genera[0]
+    elif len(genera) > 1 and genera.count(genera[1]) == 2:
+        genus = genera[1]
+
+    lengths = []
+
+    row = 0
+    read = 0
+
+    while read < 3:
+        if ">" in lines[row]:
+            while "Length=" not in lines[row]:
+                row += 1
+
+            s = lines[row - 1].split(" ")
+            g = ""
+            sp = ""
+
+            if len(s) > 2:
+                g = s[1]
+                sp = s[2]
+
+            query_num = 0
+            row_query = row
+            row_at_single_query = row
+
+            while ">" not in lines[row_query]:
+                if "Query" in lines[row_query] and not "Query= " in lines[row_query]:
+                    query_num += 1
+                    row_at_single_query = row_query
+
+                row_query += 1
+
+            if query_num == 1:
+                begin_seq = int(lines[row_at_single_query].split(" ")[2])
+                end_seq = int(lines[row_at_single_query].split(" ")[len(lines[row_at_single_query].split(" ")) - 1])
+
+                lengths.append({"Length": (end_seq - begin_seq) + 1, "Genus": g, "Species:": sp.replace("\n", "")})
+            else:
+                lengths.append({"Length": lines[row].split("=")[1].replace("\n", ""), "Genus": g, "Species:": sp.replace("\n", "")})
+            
+            read += 1
+
+        row += 1
+
+    max_length = 0
+
+    if genus != "":
+        for length in lengths:
+            if length["Genus"]:
+                if int(length["Length"]) > max_length:
+                    max_length = int(length["Length"])
+
+        info.append({ "Contig": contig[:-4], "Genus": genus, "Species": spec, "Reads": reads, "Max Length": max_length })
+
+info = sorted(info, key=lambda i: int(i['Contig'].split(" ")[1]))
+
+with open("format.csv", "w") as csv_handle:
+    writer = csv.DictWriter(csv_handle, fieldnames = info[0].keys())
+    writer.writeheader()
+    for info in info:
+        writer.writerow(info)
+    csv_handle.close()
