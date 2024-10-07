@@ -15,7 +15,9 @@ You will need to download [BLAST+](https://blast.ncbi.nlm.nih.gov/doc/blast-help
 Once downloaded, you should be set to go.
 
 Though, you may or may not need applications to help executing Shell scripts.
-If you are on Linux or Mac, no need to install any other programs. If you are on Windows, you may want to install Git [here](https://www.git-scm.com/downloads) and run the script on Git Bash.
+If you are on Linux or Mac, no need to install any other programs. If you are on Windows or a non-UNIX system, you may want to install Git [here](https://www.git-scm.com/downloads) and run the script on Git Bash.
+
+Additionally, you will need Python to run the formatting script. Install Python [here](https://www.python.org/downloads/).
 
 ## Usage
 
@@ -26,3 +28,5 @@ If you are on Linux or Mac, no need to install any other programs. If you are on
 later.)
 
 3. Run the Shell Script. Do this via `./blast.sh` on Linux, or `sh blast.sh` on Mac or on Git Bash, `bash blast.sh`.
+
+4. Once the script finishes processing, run `python format.py` to run the formatting script (translates information such as reads, similar species, etc. into a CSV file). Check out `format.txt` for additional code.
